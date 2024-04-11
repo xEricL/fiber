@@ -1664,8 +1664,10 @@ func (c *DefaultCtx) IsProxyTrusted() bool {
 
 	ip := c.fasthttp.RemoteIP()
 
-	if _, trusted := c.app.config.trustedProxiesMap[ip.String()]; trusted {
-		return true
+	for _, trusted := range c.app.config.trustedProxyIPs {
+		if trusted.Equal(ip) {
+			return true
+		}
 	}
 
 	for _, ipNet := range c.app.config.trustedProxyRanges {

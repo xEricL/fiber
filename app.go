@@ -351,7 +351,7 @@ type Config struct {
 	//
 	// Default: []string
 	TrustedProxies     []string `json:"trusted_proxies"`
-	trustedProxiesMap  map[string]struct{}
+	trustedProxyIPs    []net.IP
 	trustedProxyRanges []*net.IPNet
 
 	// If set to true, c.IP() and c.IPs() will validate IP addresses before returning them.
@@ -550,8 +550,7 @@ func New(config ...Config) *App {
 	if len(app.config.RequestMethods) == 0 {
 		app.config.RequestMethods = DefaultMethods
 	}
-
-	app.config.trustedProxiesMap = make(map[string]struct{}, len(app.config.TrustedProxies))
+	app.config.trustedProxyIPs = make([]net.IP, 0, len(app.config.TrustedProxies))
 	for _, ipAddress := range app.config.TrustedProxies {
 		app.handleTrustedProxy(ipAddress)
 	}
@@ -580,7 +579,9 @@ func (app *App) handleTrustedProxy(ipAddress string) {
 			app.config.trustedProxyRanges = append(app.config.trustedProxyRanges, ipNet)
 		}
 	} else {
-		app.config.trustedProxiesMap[ipAddress] = struct{}{}
+		if ip := net.ParseIP(ipAddress); ip != nil {
+			app.config.trustedProxyIPs = append(app.config.trustedProxyIPs, ip)
+		}
 	}
 }
 
